@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS da Longevidade - Sistema FQ5C</title>
+    <style>
+        :root {
+            --primary: #00c853; --secondary: #2979ff; --accent: #ffab00;
+            --pink: #f50057; --purple: #d500f9; --teal: #00bfa5; --orange: #ff6d00;
+            --gray: #607d8b; --bg: #f4f7f6; --white: #ffffff;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #2c3e50; margin: 0; padding: 0; line-height: 1.6; }
+        .container { max-width: 600px; margin: auto; min-height: 100vh; background: var(--white); padding-bottom: 80px; box-shadow: 0 0 30px rgba(0,0,0,0.1); }
+
+        /* Cabeçalho */
+        .header { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .score-display { font-size: 3.5rem; font-weight: 900; display: block; line-height: 1; margin: 10px 0; }
+        .brand { font-size: 0.9rem; letter-spacing: 3px; font-weight: bold; text-transform: uppercase; }
+
+        /* Menu de Navegação */
+        .nav { display: flex; background: white; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #eee; }
+        .nav-btn { flex: 1; border: none; background: none; padding: 15px 5px; font-weight: bold; color: #95a5a6; font-size: 0.8rem; cursor: pointer; text-align: center; }
+        .nav-btn.active { color: var(--secondary); border-bottom: 4px solid var(--secondary); }
+
+        .content { padding: 20px; }
+        .date-input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--secondary); font-size: 1.2rem; margin-bottom: 25px; text-align: center; font-weight: bold; background: #fff; box-sizing: border-box; }
+
+        /* Seções de Verbos */
+        .verbo-header { font-size: 1.2rem; color: white; padding: 12px; border-radius: 12px; margin-top: 35px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .task-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid #f0f0f0; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+        .task-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; display: block; color: #333; }
+
+        .btn-group { display: flex; gap: 5px; }
+        .btn-opt { flex: 1; padding: 12px 5px; border: 1px solid #ddd; border-radius: 10px; background: #fff; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
+        .btn-opt.f.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-opt.p.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .btn-opt.n.active { background: #95a5a6; color: white; border-color: #95a5a6; }
+
+        /* Notas */
+        .notes-box { width: 100%; height: 90px; padding: 12px; border-radius: 12px; border: 2px dashed #ddd; font-family: inherit; font-size: 0.9rem; margin-top: 5px; margin-bottom: 25px; box-sizing: border-box; background: #fffdf2; resize: none; }
+
+        /* Aba Sistema */
+        .manifesto-card { border-left: 5px solid var(--secondary); background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 0.95rem; }
+        .manifesto-card strong { color: var(--secondary); display: block; margin-bottom: 3px; }
+
+        .footer { text-align: center; padding: 40px; color: #bdc3c7; font-size: 0.8rem; border-top: 1px solid #eee; }
+        .hidden { display: none; }
+        .mosaico-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .mosaico-day { aspect-ratio: 1; border-radius: 5px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <span class="brand">GPS da Longevidade</span>
+        <span class="score-display" id="total-pts">0</span>
+        <span style="font-weight:bold; letter-spacing:1px; background:rgba(0,0,0,0.1); padding:5px 15px; border-radius:20px; font-size:0.7rem;">SISTEMA FQ5C</span>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn active" id="tab-hoje" onclick="changeTab('hoje')">DIÁRIO</button>
+        <button class="nav-btn" id="tab-mosaico" onclick="changeTab('mosaico')">MOSAICO</button>
+        <button class="nav-btn" id="tab-info" onclick="changeTab('info')">SISTEMA</button>
+    </div>
+
+    <div class="content">
+        <div id="view-hoje">
+            <input type="date" id="dataSel" class="date-input">
+            <div id="lista-corpo"></div>
+        </div>
+
+        <div id="view-mosaico" class="hidden">
+            <h3 style="text-align:center">Mapa de Vitalidade</h3>
+            <div class="mosaico-grid" id="mosaico-grid"></div>
+        </div>
+
+        <div id="view-info" class="hidden">
+            <h2 style="text-align:center; color: var(--secondary);">O Manifesto FQ5C</h2>
+            <p style="font-size: 0.9rem; text-align: center;">Idealizado pelo <strong>Psicólogo Ricardo de Faria Barros</strong>.</p>
+            
+            <div class="manifesto-card"><strong>🛠️ FAZER: Agência do Movimento</strong>O antídoto contra a inércia. Pequenas ações geram autoeficácia.</div>
+            <div class="manifesto-card"><strong>🌱 QUERER: Combustível do Propósito</strong>Viver sem desejar é apenas durar. Resgata o propósito e o fogo interior.</div>
+            <div class="manifesto-card"><strong>🎈 CURTIR: Direito ao Prazer</strong>O prazer regula o bem-estar e traz resiliência emocional.</div>
+            <div class="manifesto-card"><strong>📚 CONHECER: Juventude da Mente</strong>A curiosidade e o aprendizado mantêm o cérebro jovem e plástico.</div>
+            <div class="manifesto-card"><strong>💬 CONVERSAR: Terapia do Vínculo</strong>O diálogo multiplica alegrias e partilha os pesos da vida.</div>
+            <div class="manifesto-card"><strong>❤️ CUIDAR: Manutenção do Templo</strong>Cuidar do físico, dos pets e da memória (autobiografia).</div>
+            <div class="manifesto-card"><strong>🤝 COMPARTILHAR: Transcendência</strong>Oferecer afeto transforma experiência em sabedoria coletiva.</div>
+            <div class="manifesto-card"><strong>➕ OUTROS: Gestão da Vida</strong>A organização prática que permite a paz mental.</div>
+
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; text-align: center; font-size: 0.9rem;">
+                <strong>Contacto:</strong> ricardodefariabarros@gmail.com
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2026 - Ricardo de Faria Barros<br>
+        <strong>"Hoje foi o possível. E o possível já é muito."</strong>
+    </div>
+</div>
+
+<script>
+    const storageKey = "GPS_V17_FINAL";
+    const db = {
+        "🛠️ FAZER": { cor: "#2979ff", tasks: ["Caminhar 10–30 min", "Alongar o corpo", "Arrumar cama / casa", "Organizar arquivo/gaveta", "Produzir algo manual", "Cuidar do jardim", "Preparar refeição", "Registrar foto do dia", "Resolver pendência", "Fazer algo adiado"] },
+        "🌱 QUERER": { cor: "#d500f9", tasks: ["Querer empreender/criar", "Aprender algo novo/tocar", "Querer socializar mais", "Querer ir à missa/culto", "Querer melhores hábitos", "Querer menos celular", "Querer dormir bem", "Querer ser afetuoso", "Querer perder peso", "Querer ser menos rabugento"] },
+        "🎈 CURTIR": { cor: "#ff6d00", tasks: ["Curtir filme/música", "Curtir um livro", "Curtir pôr do sol", "Curtir comida gostosa", "Curtir lazer simples", "Curtir ficar quieto", "Curtir memória boa", "Curtir companhia", "Curtir um banho", "Curtir natureza"] },
+        "❤️ CUIDAR": { cor: "#f50057", tasks: ["Cuidar de plantas", "Cuidar de animais/pets", "Beber água adequadamente", "Tomar remédios no horário", "Colorir a refeição", "3 min de respiração", "Limpeza da alma", "Escrever autobiografia", "Respeitar limites", "Cuidar de si / alguém"] },
+        "📚 CONHECER": { cor: "#00bfa5", tasks: ["Ler 2 páginas", "Vídeo educativo", "Aprender algo novo", "Pesquisar curiosidade", "Ouvir com atenção", "Reconhecer porteiros/etc", "Descobrir história", "Mudar de opinião", "Estudar um tema", "Ver lugar virtual"] },
+        "💬 CONVERSAR": { cor: "#1565c0", tasks: ["Mandar mensagem carinhosa", "Telefonar para alguém", "Conversar com vizinho", "Pedir ajuda", "Ouvir sem interromper", "Visitar alguém", "Falar sentimentos", "Rir com alguém", "Encontro para café", "Participar de grupo"] },
+        "🤝 COMPARTILHAR": { cor: "#00c853", tasks: ["Ajudar com presença", "Doar o que não usa", "Partilhar história", "Solidariedade concreta", "Partilhar refeição", "Dar um abraço", "Dar palavra de apoio", "Partilhar silêncio", "Dividir conhecimento", "Partilhar fé/esperança"] },
+        "➕ OUTROS": { cor: "#607d8b", tasks: ["Resolver imprevisto", "Organizar contas/finanças", "Compras necessárias", "Cuidar de documentos", "Pequeno reparo/conserto", "Necessidade familiar", "Organizar compromissos", "Trâmite bancário/digital", "Planejar dia seguinte", "Prática livre ou extra"] }
+    };
+
+    function render() {
+        const data = document.getElementById('dataSel').value;
+        const container = document.getElementById('lista-corpo');
+        let html = '';
+
+        for (let verbo in db) {
+            html += `<div class="verbo-header" style="background:${db[verbo].cor}">${verbo}</div>`;
+            db[verbo].tasks.forEach((t, index) => {
+                const id = `${storageKey}_${data}_${verbo.substring(0,2)}_${index}`;
+                const val = localStorage.getItem(id) || 'n';
+                html += `<div class="task-card">
+                    <span class="task-title">${t}</span>
+                    <div class="btn-group">
+                        <button class="btn-opt f ${val==='f'?'active':''}" onclick="salvar('${id}','f')">Fiz</button>
+                        <button class="btn-opt p ${val==='p'?'active':''}" onclick="salvar('${id}','p')">Parte</button>
+                        <button class="btn-opt n ${val==='n'?'active':''}" onclick="salvar('${id}','n')">Não</button>
+                    </div>
+                </div>`;
+            });
+            const noteId = `note_v17_${data}_${verbo.substring(0,2)}`;
+            const noteVal = localStorage.getItem(noteId) || '';
+            html += `<p style="font-size:0.8rem; font-weight:bold; margin-bottom:5px; color:#666; padding-left:5px;">📝 Notas: ${verbo}</p>
+            <textarea class="notes-box" id="${noteId}" oninput="salvarNota('${noteId}')" placeholder="Escreva aqui...">${noteVal}</textarea>`;
+        }
+        container.innerHTML = html;
+        calc();
+    }
+
+    function salvar(id, val) { localStorage.setItem(id, val); render(); }
+    function salvarNota(id) { localStorage.setItem(id, document.getElementById(id).value); }
+
+    function calc() {
+        let total = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(storageKey)) {
+                const v = localStorage.getItem(k);
+                total += (v === 'f' ? 10 : v === 'p' ? 5 : 0);
+            }
+        }
+        document.getElementById('total-pts').innerText = total;
+    }
+
+    function changeTab(v) {
+        ['view-hoje', 'view-mosaico', 'view-info'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById('view-' + v).classList.remove('hidden');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + v).classList.add('active');
+        if(v === 'mosaico') renderMosaico();
+    }
+
+    function renderMosaico() {
+        const grid = document.getElementById('mosaico-grid');
+        grid.innerHTML = '';
+        const hoje = new Date();
+        const dias = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+        for (let d = 1; d <= dias; d++) {
+            const box = document.createElement('div');
+            box.className = 'mosaico-day';
+            box.innerText = d;
+            grid.appendChild(box);
+        }
+    }
+
+    window.onload = function() {
+        document.getElementById('dataSel').value = new Date().toISOString().split('T')[0];
+        document.getElementById('dataSel').addEventListener('change', render);
+        render();
+    };
+</script>
+</body>
+</html>
