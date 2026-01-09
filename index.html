@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS da Longevidade - Sistema FQ5C</title>
+    <style>
+        :root {
+            --primary: #00c853; --secondary: #2979ff; --accent: #ffab00;
+            --pink: #f50057; --purple: #d500f9; --teal: #00bfa5; --orange: #ff6d00;
+            --gray: #607d8b; --bg: #f4f7f6; --white: #ffffff;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #2c3e50; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: auto; min-height: 100vh; background: var(--white); padding-bottom: 80px; box-shadow: 0 0 30px rgba(0,0,0,0.1); }
+
+        /* Cabeçalho */
+        .header { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .score-display { font-size: 4rem; font-weight: 900; display: block; line-height: 1; margin: 10px 0; }
+        .brand { font-size: 0.9rem; letter-spacing: 3px; font-weight: bold; text-transform: uppercase; }
+
+        /* Menu de Navegação */
+        .nav { display: flex; background: white; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #eee; }
+        .nav-btn { flex: 1; border: none; background: none; padding: 15px 5px; font-weight: bold; color: #95a5a6; font-size: 0.85rem; cursor: pointer; }
+        .nav-btn.active { color: var(--secondary); border-bottom: 4px solid var(--secondary); }
+
+        .content { padding: 20px; }
+        .date-input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--secondary); font-size: 1.2rem; margin-bottom: 25px; text-align: center; font-weight: bold; background: #fff; box-sizing: border-box; }
+
+        /* Estilo das Seções */
+        .verbo-header { font-size: 1.3rem; color: white; padding: 15px; border-radius: 12px; margin-top: 35px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .task-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid #f0f0f0; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+        .task-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; display: block; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .btn-opt { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+        .btn-opt.f.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-opt.p.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .btn-opt.n.active { background: #95a5a6; color: white; border-color: #95a5a6; }
+
+        /* Bloco de Notas por Seção */
+        .notes-box { width: 100%; height: 90px; padding: 15px; border-radius: 12px; border: 2px dashed #ddd; font-family: inherit; font-size: 0.95rem; margin-top: 5px; margin-bottom: 25px; box-sizing: border-box; background: #fffdf2; resize: none; color: #444; }
+
+        .btn-lazer { background: var(--accent); color: #000; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 20px; font-size: 1rem; cursor: pointer; }
+
+        .footer { text-align: center; padding: 40px; color: #bdc3c7; font-size: 0.8rem; border-top: 1px solid #eee; }
+        .whatsapp-link { display: block; background: #25d366; color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; text-align: center; margin: 20px 0; }
+        
+        .hidden { display: none; }
+        .mosaico-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .mosaico-day { aspect-ratio: 1; border-radius: 5px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <span class="brand">GPS da Longevidade</span>
+        <span class="score-display" id="total-pts">0</span>
+        <span style="font-weight:bold; letter-spacing:1px; background:rgba(0,0,0,0.1); padding:5px 15px; border-radius:20px;">SISTEMA FQ5C</span>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn active" id="tab-hoje" onclick="changeTab('hoje')">DIÁRIO</button>
+        <button class="nav-btn" id="tab-mosaico" onclick="changeTab('mosaico')">MOSAICO</button>
+        <button class="nav-btn" id="tab-info" onclick="changeTab('info')">SISTEMA</button>
+    </div>
+
+    <div class="content">
+        <div id="view-hoje">
+            <input type="date" id="dataSel" class="date-input">
+            <div id="lista-corpo"></div>
+        </div>
+
+        <div id="view-mosaico" class="hidden">
+            <h3 style="text-align:center">Histórico de Vitalidade</h3>
+            <div class="mosaico-grid" id="mosaico-grid"></div>
+        </div>
+
+        <div id="view-info" class="hidden">
+            <h2 style="color:var(--secondary)">Sobre o Sistema</h2>
+            <p>O <strong>GPS da Longevidade</strong> utiliza o método <strong>FQ5C</strong> do Psicólogo Ricardo de Faria Barros.</p>
+            <p><strong>Filosofia:</strong> Fazer, Querer + 5 Cs (Curtir, Conhecer, Conversar, Cuidar, Compartilhar) + Gestão da Vida (Outros).</p>
+            <a href="mailto:ricardodefariabarros@gmail.com" class="whatsapp-link" style="background:var(--secondary)">📧 Enviar E-mail</a>
+            <p style="text-align:center; color:#95a5a6">ricardodefariabarros@gmail.com</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2026 - Ricardo de Faria Barros<br>
+        <strong>"Hoje foi o possível. E o possível já é muito."</strong>
+    </div>
+</div>
+
+<script>
+    const storageKey = "GPS_V14_FINAL";
+
+    const db = {
+        "🛠️ FAZER": { cor: "var(--secondary)", tasks: ["Caminhar 10–30 min", "Alongar o corpo", "Arrumar cama / casa", "Organizar gaveta/arquivo", "Produzir algo manual", "Cuidar do jardim", "Preparar refeição", "Registrar foto do dia", "Resolver pendência", "Fazer algo adiado"] },
+        "🌱 QUERER": { cor: "var(--purple)", tasks: ["Querer empreender/criar", "Querer aprender algo novo", "Querer socializar mais", "Querer melhores hábitos", "Querer sair de casa", "Querer menos celular", "Querer cuidar da saúde", "Querer perder peso", "Querer planejar viagem", "Querer ser afetuoso/menos ácido"] },
+        "🎈 CURTIR": { cor: "var(--orange)", tasks: ["Curtir filme/música", "Curtir um livro", "Curtir pôr do sol", "Curtir comida gostosa", "Curtir lazer simples", "Curtir ficar quieto", "Curtir memória boa", "Curtir companhia", "Curtir um banho", "Curtir natureza"] },
+        "❤️ CUIDAR": { cor: "var(--pink)", tasks: ["Cuidar de plantas", "Cuidar de animais/pets", "Beber água", "Tomar remédios no horário", "Colorir a refeição", "3 min de respiração", "Limpeza da alma", "Escrever autobiografia", "Respeitar limites", "Cuidar de alguém"] },
+        "📚 CONHECER": { cor: "var(--teal)", tasks: ["Ler 2 páginas", "Vídeo educativo", "Aprender algo novo", "Pesquisar curiosidade", "Ouvir com atenção", "Reconhecer porteiros/entregadores", "Descobrir história", "Mudar de opinião", "Estudar um tema", "Ver lugar virtual"] },
+        "💬 CONVERSAR": { cor: "var(--blue)", tasks: ["Mandar mensagem carinhosa", "Telefonar para alguém", "Conversar com vizinho", "Pedir ajuda", "Ouvir sem interromper", "Visitar alguém", "Falar sentimentos", "Rir com alguém", "Encontro para café", "Participar de grupo"] },
+        "🤝 COMPARTILHAR": { cor: "var(--green)", tasks: ["Ajudar com presença", "Doar o que não usa", "Partilhar história", "Solidariedade concreta", "Partilhar refeição", "Dar um abraço", "Dar palavra de apoio", "Partilhar silêncio", "Dividir conhecimento", "Partilhar fé/esperança"] },
+        "➕ OUTROS": { cor: "var(--gray)", tasks: ["Resolver imprevisto", "Organizar contas/finanças", "Compras necessárias", "Cuidar de documentos", "Pequeno reparo/conserto", "Necessidade familiar", "Organizar compromissos", "Trâmite bancário/digital", "Planejar dia seguinte", "Prática livre ou extra"] }
+    };
+
+    function render() {
+        const data = document.getElementById('dataSel').value;
+        const container = document.getElementById('lista-corpo');
+        container.innerHTML = '';
+
+        for (let verbo in db) {
+            container.innerHTML += `<div class="verbo-header" style="background:${db[verbo].cor}">${verbo}</div>`;
+            
+            if (verbo.includes("CURTIR")) {
+                container.innerHTML += `<button class="btn-lazer" onclick="sorteio()">🎲 SORTEIO DO LAZER</button>`;
+            }
+
+            db[verbo].tasks.forEach(t => {
+                const id = `${storageKey}_${data}_${t.substring(0,10).replace(/\s+/g, '')}`;
+                const val
