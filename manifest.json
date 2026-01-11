@@ -1,0 +1,13 @@
+{
+  "name": "GPS da Longevidade",
+  "short_name": "GPS FQ5C",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#FFEB3B",
+  "theme_color": "#2979ff",
+  "icons": [{
+    "src": "https://cdn-icons-png.flaticon.com/512/2983/2983791.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }]
+}
